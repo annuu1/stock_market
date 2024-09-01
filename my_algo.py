@@ -127,8 +127,8 @@ class DemandZoneApp(ctk.CTk):
         # Filter daily data based on the detected monthly demand zones
         filtered_daily_data = pd.DataFrame()
         for dz in monthly_demand_zones:
-            first_base_date = monthly_data.index[dz[1]]  # Change: Start from the first base candle
-            last_base_date = monthly_data.index[dz[2]]  # End at the leg-out candle
+            first_base_date = monthly_data.index[dz[0]+1]
+            last_base_date = monthly_data.index[dz[1]]
 
             filtered_data = daily_data.loc[first_base_date:last_base_date]
             
@@ -182,6 +182,7 @@ class DemandZoneApp(ctk.CTk):
             lowest_low = min(candle.low for candle in base_candles)
 
             # Check if the zone has been tested and if it met the 1:2 target
+            # Change: We now check until the last candle in the entire dataset.
             color = self.check_zone_tested_and_target(dz, filtered_candles, dz[1] + 1)
 
             if color == 'green':
@@ -205,13 +206,13 @@ class DemandZoneApp(ctk.CTk):
             # Map the corresponding monthly demand zone
             higher_timeframe_zone = None
             for monthly_zone in monthly_demand_zones:
-                if filtered_daily_data.index[dz[0]] >= monthly_data.index[monthly_zone[1]] and filtered_daily_data.index[dz[1]] <= monthly_data.index[monthly_zone[2]]:
+                if filtered_daily_data.index[dz[0]] >= monthly_data.index[monthly_zone[0]] and filtered_daily_data.index[dz[1]] <= monthly_data.index[monthly_zone[1]]:
                     higher_timeframe_zone = monthly_zone
                     break
 
             if higher_timeframe_zone:
-                higher_legin_candle = monthly_candles[higher_timeframe_zone[1]]
-                higher_legout_candle = monthly_candles[higher_timeframe_zone[2]]
+                higher_legin_candle = monthly_candles[higher_timeframe_zone[0]]
+                higher_legout_candle = monthly_candles[higher_timeframe_zone[1]]
             else:
                 higher_legin_candle = None
                 higher_legout_candle = None
@@ -297,8 +298,8 @@ class DemandZoneApp(ctk.CTk):
             # Filter daily data based on the detected monthly demand zones
             filtered_daily_data = pd.DataFrame()
             for dz in monthly_demand_zones:
-                first_base_date = monthly_data.index[dz[1]]  # Change: Start from the first base candle
-                last_base_date = monthly_data.index[dz[2]]  # End at the leg-out candle
+                first_base_date = monthly_data.index[dz[0]]
+                last_base_date = monthly_data.index[dz[1]]
 
                 filtered_data = daily_data.loc[first_base_date:last_base_date]
                 
@@ -335,23 +336,24 @@ class DemandZoneApp(ctk.CTk):
                 lowest_low = min(candle.low for candle in base_candles)
 
                 # Define leg-in and leg-out candles
-                legin_candle = filtered_candles[dz[0]]
+                legin_candle = filtered_candles[dz[0]+1]
                 legout_candle = filtered_candles[dz[1]]
 
                 # Map the corresponding monthly demand zone
                 higher_timeframe_zone = None
                 for monthly_zone in monthly_demand_zones:
-                    if filtered_daily_data.index[dz[0]] >= monthly_data.index[monthly_zone[1]] and filtered_daily_data.index[dz[1]] <= monthly_data.index[monthly_zone[2]]:
+                    if filtered_daily_data.index[dz[0]] >= monthly_data.index[monthly_zone[0]] and filtered_daily_data.index[dz[1]] <= monthly_data.index[monthly_zone[1]]:
                         higher_timeframe_zone = monthly_zone
                         break
 
                 if higher_timeframe_zone:
-                    higher_legin_candle = monthly_candles[higher_timeframe_zone[1]]
-                    higher_legout_candle = monthly_candles[higher_timeframe_zone[2]]
+                    higher_legin_candle = monthly_candles[higher_timeframe_zone[0]]
+                    higher_legout_candle = monthly_candles[higher_timeframe_zone[1]]
                 else:
                     higher_legin_candle = None
                     higher_legout_candle = None
 
+                # Change: Always check until the last candle in the entire dataset
                 status = self.check_zone_tested_and_target(dz, filtered_candles, dz[1] + 1)
 
                 csv_data.append({
@@ -418,7 +420,7 @@ class DemandZoneApp(ctk.CTk):
         risk = highest_high - lowest_low
         target_price = highest_high + 2 * risk
 
-        # Continue checking until the last candle in the dataset
+        # Change: Continue checking until the last candle in the dataset
         for k in range(start_index, len(candles)):
             if candles[k].low <= highest_high and candles[k].high >= lowest_low:
                 # Check if the price hits the 1:2 target after entering the zone
