@@ -297,6 +297,7 @@ class DemandZoneApp(ctk.CTk):
 
             # Filter daily data based on the detected monthly demand zones
             filtered_daily_data = pd.DataFrame()
+            filtered_daily_check_data = pd.DataFrame()
             for dz in monthly_demand_zones:
                 first_base_date = monthly_data.index[dz[0]]
                 last_base_date = monthly_data.index[dz[1]]
@@ -308,8 +309,18 @@ class DemandZoneApp(ctk.CTk):
                 
                 filtered_daily_data = pd.concat([filtered_daily_data, filtered_data])
 
+                filtered_check_data = daily_data.loc[first_base_date:]
+                
+                # Ensure the filtered ckeck data has a DatetimeIndex
+                filtered_check_data.index = pd.to_datetime(filtered_check_data.index)
+                
+                filtered_daily_check_data = pd.concat([filtered_daily_check_data, filtered_check_data])
+
             # Reset the index to ensure it's a proper DatetimeIndex after filtering
             filtered_daily_data.index = pd.to_datetime(filtered_daily_data.index)
+
+            # Reset the index to ensure it's a proper DatetimeIndex after filtering
+            filtered_daily_check_data.index = pd.to_datetime(filtered_daily_check_data.index)
 
             if filtered_daily_data.empty:
                 continue
@@ -318,6 +329,11 @@ class DemandZoneApp(ctk.CTk):
             filtered_candles = []
             for idx, row in filtered_daily_data.iterrows():
                 filtered_candles.append(Candle(row['Open'], row['High'], row['Low'], row['Close'], idx))
+
+            # Convert filtered daily data to Candle objects
+            filtered_check_candles = []
+            for idx_check, row in filtered_daily_check_data.iterrows():
+                filtered_check_candles.append(Candle(row['Open'], row['High'], row['Low'], row['Close'], idx_check))
 
             # Detect demand zones in the filtered daily data
             demand_zones = self.detect_demand_zones(
@@ -354,7 +370,7 @@ class DemandZoneApp(ctk.CTk):
                     higher_legout_candle = None
 
                 # Change: Always check until the last candle in the entire dataset
-                status = self.check_zone_tested_and_target(dz, filtered_candles, dz[1] + 1)
+                status = self.check_zone_tested_and_target(dz, filtered_check_candles, dz[1] + 1)
 
                 csv_data.append({
                     "Symbol": symbol,
