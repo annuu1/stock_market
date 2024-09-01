@@ -332,6 +332,13 @@ class DemandZoneApp(ctk.CTk):
             "TECHM.NS", "BRITANNIA.NS", "EICHERMOT.NS", "HINDALCO.NS", "TATACONSUM.NS", 
             "APOLLOHOSP.NS", "ADANIENT.NS", "UPL.NS", "SBILIFE.NS"
         ]
+        symbols_csv_file = 'symbols.csv'
+        with open(symbols_csv_file, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)  # Skip the header row
+            for row in reader:
+                nifty50_symbols.append(row[0])  # Assuming the symbol is in the first column
+
 
         start_date_htf = self.start_date_entry_htf.get() or "2024-01-01"
         end_date_htf = self.end_date_entry_htf.get() or "2024-12-31"
