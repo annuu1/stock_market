@@ -14,7 +14,78 @@ class DemandZoneApp(ctk.CTk):
         self.title("Demand Zone Detector")
         self.geometry("600x900")
 
-        # Create a scrollable frame
+        # Create a frame for higher time frame settings
+        self.higher_time_frame_frame = ctk.CTkScrollableFrame(self, width=280, height=800)
+        self.higher_time_frame_frame.pack(side="left", padx=10, pady=10)
+
+        # Input fields with default values
+        self.symbol_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Symbol (e.g., ^NSEBANK):")
+        self.symbol_label_htf.pack(pady=5)
+        self.symbol_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="^NSEBANK")
+        self.symbol_entry_htf.pack(pady=5)
+
+        self.start_date_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Start Date (YYYY-MM-DD):")
+        self.start_date_label_htf.pack(pady=5)
+        self.start_date_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="2023-01-01")
+        self.start_date_entry_htf.pack(pady=5)
+
+        self.end_date_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="End Date (YYYY-MM-DD):")
+        self.end_date_label_htf.pack(pady=5)
+        self.end_date_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="2023-12-31")
+        self.end_date_entry_htf.pack(pady=5)
+
+        # Leg-in Candle Inputs
+        self.min_legin_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Min Leg-In Candle Body %:")
+        self.min_legin_label_htf.pack(pady=5)
+        self.min_legin_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="50")
+        self.min_legin_entry_htf.pack(pady=5)
+
+        self.max_legin_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Max Leg-In Candle Body %:")
+        self.max_legin_label_htf.pack(pady=5)
+        self.max_legin_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="100")
+        self.max_legin_entry_htf.pack(pady=5)
+
+        # Base Candle Inputs
+        self.min_base_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Min Base Candles:")
+        self.min_base_label_htf.pack(pady=5)
+        self.min_base_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="1")
+        self.min_base_entry_htf.pack(pady=5)
+
+        self.max_base_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Max Base Candles:")
+        self.max_base_label_htf.pack(pady=5)
+        self.max_base_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="5")
+        self.max_base_entry_htf.pack(pady=5)
+
+        self.min_base_pct_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Min Base Candle Body %:")
+        self.min_base_pct_label_htf.pack(pady=5)
+        self.min_base_pct_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="0")
+        self.min_base_pct_entry_htf.pack(pady=5)
+
+        self.max_base_pct_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Max Base Candle Body %:")
+        self.max_base_pct_label_htf.pack(pady=5)
+        self.max_base_pct_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="50")
+        self.max_base_pct_entry_htf.pack(pady=5)
+
+        # Leg-out Candle Inputs
+        self.min_legout_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Min Leg-Out Candle Body %:")
+        self.min_legout_label_htf.pack(pady=5)
+        self.min_legout_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="50")
+        self.min_legout_entry_htf.pack(pady=5)
+
+        self.max_legout_label_htf = ctk.CTkLabel(self.higher_time_frame_frame, text="Max Leg-Out Candle Body %:")
+        self.max_legout_label_htf.pack(pady=5)
+        self.max_legout_entry_htf = ctk.CTkEntry(self.higher_time_frame_frame, placeholder_text="100")
+        self.max_legout_entry_htf.pack(pady=5)
+
+        # Button to trigger demand zone detection for a single stock
+        self.calculate_button_htf = ctk.CTkButton(self.higher_time_frame_frame, text="Detect Demand Zones", command=self.detect_zones)
+        self.calculate_button_htf.pack(pady=20)
+
+        # Button to trigger scanning of all Nifty 50 stocks
+        self.scan_all_button_htf = ctk.CTkButton(self.higher_time_frame_frame, text="Scan All Nifty 50 Stocks", command=self.scan_all_nifty50)
+        self.scan_all_button_htf.pack(pady=20)
+
+        # Create a scrollable frame for lower timeframe
         self.scrollable_frame = ctk.CTkScrollableFrame(self, width=580, height=800)
         self.scrollable_frame.pack(pady=10)
 
@@ -127,7 +198,7 @@ class DemandZoneApp(ctk.CTk):
         # Filter daily data based on the detected monthly demand zones
         filtered_daily_data = pd.DataFrame()
         for dz in monthly_demand_zones:
-            first_base_date = monthly_data.index[dz[0]]
+            first_base_date = monthly_data.index[dz[0]+1]
             last_base_date = monthly_data.index[dz[1]]
 
             filtered_data = daily_data.loc[first_base_date:last_base_date]
@@ -262,8 +333,20 @@ class DemandZoneApp(ctk.CTk):
             "APOLLOHOSP.NS", "ADANIENT.NS", "UPL.NS", "SBILIFE.NS"
         ]
 
-        start_date = self.start_date_entry.get() or "2023-01-01"
-        end_date = self.end_date_entry.get() or "2023-12-31"
+        start_date_htf = self.start_date_entry_htf.get() or "2024-01-01"
+        end_date_htf = self.end_date_entry_htf.get() or "2024-12-31"
+        min_legin_pct_htf = float(self.min_legin_entry_htf.get() or "50")
+        max_legin_pct_htf = float(self.max_legin_entry_htf.get() or "100")
+        min_base_htf = int(self.min_base_entry_htf.get() or "1")
+        max_base_htf = int(self.max_base_entry_htf.get() or "5")
+        min_base_pct_htf = float(self.min_base_pct_entry_htf.get() or "0")
+        max_base_pct_htf = float(self.max_base_pct_entry_htf.get() or "50")
+        min_legout_pct_htf = float(self.min_legout_entry_htf.get() or "50")
+        max_legout_pct_htf = float(self.max_legout_entry_htf.get() or "100")
+
+
+        start_date = self.start_date_entry.get() or "2024-01-01"
+        end_date = self.end_date_entry.get() or "2024-12-31"
         min_legin_pct = float(self.min_legin_entry.get() or "50")
         max_legin_pct = float(self.max_legin_entry.get() or "100")
         min_base = int(self.min_base_entry.get() or "1")
@@ -277,7 +360,7 @@ class DemandZoneApp(ctk.CTk):
 
         for symbol in nifty50_symbols:
             # Fetch monthly data for the given symbol
-            monthly_data = yf.download(symbol, start=start_date, end=end_date, interval="1mo")
+            monthly_data = yf.download(symbol, start=start_date_htf, end=end_date_htf, interval="1mo")
 
             # Convert monthly data to a list of Candle objects
             monthly_candles = []
@@ -286,7 +369,7 @@ class DemandZoneApp(ctk.CTk):
 
             # Detect monthly demand zones
             monthly_demand_zones = self.detect_demand_zones(
-                monthly_candles, min_legin_pct, max_legin_pct, min_base, max_base, min_base_pct, max_base_pct, min_legout_pct, max_legout_pct
+                monthly_candles, min_legin_pct_htf, max_legin_pct_htf, min_base_htf, max_base_htf, min_base_pct_htf, max_base_pct_htf, min_legout_pct_htf, max_legout_pct_htf
             )
 
             if not monthly_demand_zones:
@@ -297,6 +380,7 @@ class DemandZoneApp(ctk.CTk):
 
             # Filter daily data based on the detected monthly demand zones
             filtered_daily_data = pd.DataFrame()
+            filtered_daily_check_data = pd.DataFrame()
             for dz in monthly_demand_zones:
                 first_base_date = monthly_data.index[dz[0]]
                 last_base_date = monthly_data.index[dz[1]]
@@ -308,8 +392,18 @@ class DemandZoneApp(ctk.CTk):
                 
                 filtered_daily_data = pd.concat([filtered_daily_data, filtered_data])
 
+                filtered_check_data = daily_data.loc[first_base_date:]
+                
+                # Ensure the filtered ckeck data has a DatetimeIndex
+                filtered_check_data.index = pd.to_datetime(filtered_check_data.index)
+                
+                filtered_daily_check_data = pd.concat([filtered_daily_check_data, filtered_check_data])
+
             # Reset the index to ensure it's a proper DatetimeIndex after filtering
             filtered_daily_data.index = pd.to_datetime(filtered_daily_data.index)
+
+            # Reset the index to ensure it's a proper DatetimeIndex after filtering
+            filtered_daily_check_data.index = pd.to_datetime(filtered_daily_check_data.index)
 
             if filtered_daily_data.empty:
                 continue
@@ -318,6 +412,11 @@ class DemandZoneApp(ctk.CTk):
             filtered_candles = []
             for idx, row in filtered_daily_data.iterrows():
                 filtered_candles.append(Candle(row['Open'], row['High'], row['Low'], row['Close'], idx))
+
+            # Convert filtered daily data to Candle objects
+            filtered_check_candles = []
+            for idx_check, row in filtered_daily_check_data.iterrows():
+                filtered_check_candles.append(Candle(row['Open'], row['High'], row['Low'], row['Close'], idx_check))
 
             # Detect demand zones in the filtered daily data
             demand_zones = self.detect_demand_zones(
@@ -336,7 +435,7 @@ class DemandZoneApp(ctk.CTk):
                 lowest_low = min(candle.low for candle in base_candles)
 
                 # Define leg-in and leg-out candles
-                legin_candle = filtered_candles[dz[0]]
+                legin_candle = filtered_candles[dz[0]+1]
                 legout_candle = filtered_candles[dz[1]]
 
                 # Map the corresponding monthly demand zone
@@ -354,7 +453,7 @@ class DemandZoneApp(ctk.CTk):
                     higher_legout_candle = None
 
                 # Change: Always check until the last candle in the entire dataset
-                status = self.check_zone_tested_and_target(dz, filtered_candles, dz[1] + 1)
+                status = self.check_zone_tested_and_target(dz, filtered_check_candles, dz[1] + 1)
 
                 csv_data.append({
                     "Symbol": symbol,
